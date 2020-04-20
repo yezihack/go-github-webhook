@@ -8,6 +8,9 @@ import (
 
 func main() {
 	r := gin.Default()
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, "PONG")
+	})
 	r.POST("/sgfoot.com", func(c *gin.Context) {
 		WebHookLog("qweqwe")
 	})
