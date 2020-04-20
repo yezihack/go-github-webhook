@@ -13,3 +13,5 @@ clean:
 
 run:clean build
 	bin/go_hooks
+
+.PHONY:fmt build clean run dev

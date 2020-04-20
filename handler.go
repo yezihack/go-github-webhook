@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -56,8 +57,14 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 		}
 
 		// Get payload
-		payload := GitHubPayload{}
-		if err := json.Unmarshal(body, &payload); err != nil {
+		payload := c.PostForm("payload")
+		if payload == "" {
+			_fail(errors.New("payload is null"))
+			return
+		}
+		fmt.Println("xxxx", payload, c.Request.Method)
+		payloadJson := GitHubPayload{}
+		if err := json.Unmarshal([]byte(payload), &payloadJson); err != nil {
 			_fail(fmt.Errorf("Could not deserialize payload"))
 			return
 		}
