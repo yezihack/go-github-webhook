@@ -182,4 +182,3 @@ type HeadCommit struct {
 	Removed   []interface{} `json:"removed"`
 	Modified  []string      `json:"modified"`
 }
-

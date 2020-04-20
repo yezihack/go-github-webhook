@@ -96,8 +96,8 @@ func validePayloadSignature(secret, signatureHeader string, body []byte) error {
 
 func succeed(c *gin.Context, event string) {
 	c.JSON(200, PayloadPong{
-		Ok:true,
-		Event:event,
+		Ok:    true,
+		Event: event,
 	})
 }
 
