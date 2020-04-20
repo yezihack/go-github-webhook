@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -16,7 +17,7 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 		event := c.GetHeader("x-github-event")
 		delivery := c.GetHeader("x-github-delivery")
 		signature := c.GetHeader("x-hub-signature")
-
+		log.Printf("event:%s, delivery:%s, sign:%s \n", event, delivery, signature)
 		// Utility funcs
 		_fail := func(err error) {
 			fail(c, event, err)
@@ -39,6 +40,7 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 
 		// Read body
 		body, err := ioutil.ReadAll(c.Request.Body)
+		log.Println("body", body)
 		if err != nil {
 			_fail(err)
 			return
