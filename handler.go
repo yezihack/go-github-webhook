@@ -40,7 +40,7 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 
 		// Read body
 		body, err := ioutil.ReadAll(c.Request.Body)
-		log.Println("body", body)
+		log.Println("body", string(body))
 		if err != nil {
 			_fail(err)
 			return
@@ -102,6 +102,7 @@ func succeed(c *gin.Context, event string) {
 }
 
 func fail(c *gin.Context, event string, err error) {
+	log.Printf("event:%s, err:%s", event, err.Error())
 	c.JSON(500, PayloadPong{
 		Ok:    false,
 		Event: event,
