@@ -1,27 +1,28 @@
-package github
+package main
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
-type WebhookHandler func(eventname string, payload *GitHubPayload, req *http.Request) error
+type WebHookHandler func(eventname string, payload *GitHubPayload, req *http.Request) error
 
-func Handler(secret string, fn WebhookHandler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		event := req.Header.Get("x-github-event")
-		delivery := req.Header.Get("x-github-delivery")
-		signature := req.Header.Get("x-hub-signature")
+func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		event := c.GetHeader("x-github-event")
+		delivery := c.GetHeader("x-github-delivery")
+		signature := c.GetHeader("x-hub-signature")
 
 		// Utility funcs
 		_fail := func(err error) {
-			fail(w, event, err)
+			fail(c, event, err)
 		}
 		_succeed := func() {
-			succeed(w, event)
+			succeed(c, event)
 		}
 
 		// Ensure headers are all there
@@ -37,7 +38,7 @@ func Handler(secret string, fn WebhookHandler) http.Handler {
 		}
 
 		// Read body
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := ioutil.ReadAll(c.Request.Body)
 		if err != nil {
 			_fail(err)
 			return
@@ -60,12 +61,12 @@ func Handler(secret string, fn WebhookHandler) http.Handler {
 		}
 
 		// Do something with payload
-		if err := fn(event, &payload, req); err == nil {
+		if err := fn(event, &payload, c.Request); err == nil {
 			_succeed()
 		} else {
 			_fail(err)
 		}
-	})
+	}
 }
 
 func validePayloadSignature(secret, signatureHeader string, body []byte) error {
@@ -91,27 +92,17 @@ func validePayloadSignature(secret, signatureHeader string, body []byte) error {
 	return nil
 }
 
-func succeed(w http.ResponseWriter, event string) {
-	render(w, PayloadPong{
-		Ok:    true,
-		Event: event,
+func succeed(c *gin.Context, event string) {
+	c.JSON(200, PayloadPong{
+		Ok:true,
+		Event:event,
 	})
 }
 
-func fail(w http.ResponseWriter, event string, err error) {
-	w.WriteHeader(500)
-	render(w, PayloadPong{
+func fail(c *gin.Context, event string, err error) {
+	c.JSON(500, PayloadPong{
 		Ok:    false,
 		Event: event,
 		Error: err.Error(),
 	})
-}
-
-func render(w http.ResponseWriter, v interface{}) {
-	data, err := json.Marshal(v)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	w.Write(data)
 }
