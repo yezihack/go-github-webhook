@@ -70,7 +70,7 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 		}
 
 		// Do something with payload
-		if err := fn(event, &payload, c.Request); err == nil {
+		if err := fn(event, &payloadJson, c.Request); err == nil {
 			_succeed()
 		} else {
 			_fail(err)
