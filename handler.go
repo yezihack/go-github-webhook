@@ -68,9 +68,8 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 			}
 			payloadData = []byte(payloadUrlDecode)
 		} else if contentType == "application/json" {
-
+			payloadData = body
 		}
-
 		payload := GitHubPayload{}
 		if err := json.Unmarshal(payloadData, &payload); err != nil {
 			_fail(fmt.Errorf("Could not deserialize payload"))
