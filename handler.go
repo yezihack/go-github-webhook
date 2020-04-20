@@ -18,6 +18,8 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 		event := c.GetHeader("x-github-event")
 		delivery := c.GetHeader("x-github-delivery")
 		signature := c.GetHeader("x-hub-signature")
+		contentType := c.GetHeader("Content-Type")
+
 		//log.Printf("event:%s, delivery:%s, sign:%s \n", event, delivery, signature)
 		// Utility funcs
 		_fail := func(err error) {
@@ -55,14 +57,22 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 			}
 		}
 		// Get payload. from github data is encode. fix by 2020.04.20
-		payload_split := strings.SplitN(string(body), "=", 2)
-		payloadUrlDecode, err := url.QueryUnescape(payload_split[1])
-		if err != nil {
-			_fail(err)
-			return
+		fmt.Println(string(body))
+		var payloadData []byte
+		if contentType == "application/x-www-form-urlencoded" {
+			payload_split := strings.SplitN(string(body), "=", 2)
+			payloadUrlDecode, err := url.QueryUnescape(payload_split[1])
+			if err != nil {
+				_fail(err)
+				return
+			}
+			payloadData = []byte(payloadUrlDecode)
+		} else if contentType == "application/json" {
+
 		}
+
 		payload := GitHubPayload{}
-		if err := json.Unmarshal([]byte(payloadUrlDecode), &payload); err != nil {
+		if err := json.Unmarshal(payloadData, &payload); err != nil {
 			_fail(fmt.Errorf("Could not deserialize payload"))
 			return
 		}

@@ -19,7 +19,7 @@ func main() {
 func WebHookLog(secret string) gin.HandlerFunc {
 	return Handler(secret, func(event string, payload *GitHubPayload, req *http.Request) error {
 		// Log webhook
-		log.Println("Received", event, "for ", payload.Repository.Name)
+		log.Println("Received:", event, "for:", payload.Repository.Name)
 
 		// You'll probably want to do some real processing
 		log.Println("Can clone repo at:", payload.Repository.CloneURL)
