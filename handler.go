@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -18,7 +18,7 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 		event := c.GetHeader("x-github-event")
 		delivery := c.GetHeader("x-github-delivery")
 		signature := c.GetHeader("x-hub-signature")
-		log.Printf("event:%s, delivery:%s, sign:%s \n", event, delivery, signature)
+		//log.Printf("event:%s, delivery:%s, sign:%s \n", event, delivery, signature)
 		// Utility funcs
 		_fail := func(err error) {
 			fail(c, event, err)
@@ -41,7 +41,6 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 
 		// Read body
 		body, err := ioutil.ReadAll(c.Request.Body)
-		log.Println("body", string(body))
 		if err != nil {
 			_fail(err)
 			return
@@ -55,22 +54,20 @@ func Handler(secret string, fn WebHookHandler) gin.HandlerFunc {
 				return
 			}
 		}
-
-		// Get payload
-		payload := c.PostForm("payload")
-		if payload == "" {
-			_fail(errors.New("payload is null"))
+		// Get payload. from github data is encode. fix by 2020.04.20
+		payload_split := strings.SplitN(string(body), "=", 2)
+		payloadUrlDecode, err := url.QueryUnescape(payload_split[1])
+		if err != nil {
+			_fail(err)
 			return
 		}
-		fmt.Println("xxxx", payload, c.Request.Method)
-		payloadJson := GitHubPayload{}
-		if err := json.Unmarshal([]byte(payload), &payloadJson); err != nil {
+		payload := GitHubPayload{}
+		if err := json.Unmarshal([]byte(payloadUrlDecode), &payload); err != nil {
 			_fail(fmt.Errorf("Could not deserialize payload"))
 			return
 		}
-
 		// Do something with payload
-		if err := fn(event, &payloadJson, c.Request); err == nil {
+		if err := fn(event, &payload, c.Request); err == nil {
 			_succeed()
 		} else {
 			_fail(err)
