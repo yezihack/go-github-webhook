@@ -3,12 +3,12 @@
 name=go-hooks
 VERSION=1.0
 
-dev:clean run
+dev:run
 
 fmt:
 	gofmt -l -w ./
 
-build:fmt
+build:clean fmt
 	go build -o bin/test/${name} .
 
 clean:
